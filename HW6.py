@@ -125,7 +125,7 @@ def loadData(training_name, validation_name, testing_name):
 def determinize(threshold, probabilities):
     labels = []
     for p in probabilities:
-        if p[0] >= threshold: labels.append(1)
+        if p[1] >= threshold: labels.append(1)
         else: labels.append(0)
     return labels
 
@@ -277,13 +277,15 @@ def exercise5(model2, model3, model4):
         for threshold in thresholds:
             P = determinize(threshold, p)
             cm = confusionMatrix(y, P)
-            tpr = (cm[1][1])/len(P)
-            fpr = (cm[0][1])/len(P)
+            positive = float(cm[1][1] + cm[1][0])
+            negative = float(cm[0][1] + cm[0][0])
+            tpr = (cm[1][1])/positive if positive > 0 else 0
+            fpr = (cm[0][1])/negative if negative > 0 else 0
             TPR.append(tpr)
             FPR.append(fpr)
         
         pyplot.scatter(TPR, FPR)
-        pyplot.show()
+    pyplot.show()
 
 model2 = exercise2()
 model3 = exercise3()
