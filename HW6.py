@@ -1,3 +1,4 @@
+from cProfile import label
 from math import inf, log
 import math
 import numpy as np
@@ -9,6 +10,7 @@ from sklearn.metrics import log_loss
 from sklearn.neural_network import MLPClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier
+from sklearn.metrics import roc_auc_score
 
 from matplotlib import pyplot
 
@@ -269,7 +271,7 @@ def exercise5(model2, model3, model4):
 
     thresholds = np.arange(0.0, 1.001, .001)
 
-    for model in model2, model3, model4:
+    for model, name in (model2, "MLP"), (model3, "Decision Tree"), (model4, "Boost"):
         TPR = []
         FPR = []
         max_youden = -inf
@@ -288,15 +290,18 @@ def exercise5(model2, model3, model4):
             if youden > max_youden: 
                 max_youden = youden
                 max_threshold = threshold
-        print("Highest Youden is:", max_youden,"Probability threshold is:",max_threshold)
+        print(name, "Highest Youden is:", max_youden,"Probability threshold is:",max_threshold)
+        print("AUC: ", roc_auc_score(y_test, y))
         
-        pyplot.scatter(FPR, TPR)
+        pyplot.scatter(FPR, TPR, label = name)
     x = [0, 1]
     y = [0, 1]
     pyplot.plot(x, y, '--', color='0.5')
     pyplot.xlabel("FPR")
     pyplot.ylabel("TPR")
+    pyplot.legend()
     pyplot.show()
+    
 
 model2 = exercise2()
 model3 = exercise3()
