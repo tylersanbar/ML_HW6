@@ -120,6 +120,13 @@ def loadData(training_name, validation_name, testing_name):
     testing_data = np.loadtxt(testing_name,skiprows=1,delimiter=",")
     return training_data, validation_data, testing_data
 
+def determinize(threshold, probabilities):
+    labels = []
+    for p in probabilities:
+        if p[0] >= threshold: labels.append(1)
+        else: labels.append(0)
+    return labels
+
 def exercise2():
     print("Exercise 2")
     #Get data from CSVs
@@ -178,8 +185,8 @@ def exercise3():
     gini_predict = gini_tree.predict_proba(X_val)
     entropy_predict = entropy_tree.predict_proba(X_val)
 
-    gini_cross = crossEntropy(y_val, gini_predict)
-    entropy_cross = crossEntropy(y_val, entropy_predict)
+    gini_cross = log_loss(y_val, gini_predict)
+    entropy_cross = log_loss(y_val, entropy_predict)
 
     print("Cross Entropy for Gini: ", gini_cross)
     print("Cross Entropy for Info Gain: ",entropy_cross)
@@ -193,7 +200,7 @@ def exercise3():
 
     best_classifier.fit(X_combo, y_combo)
     testing_predictions = best_classifier.predict_proba(X_test)
-    print("Testing Cross Entropy:",crossEntropy(y_test, testing_predictions))
+    print("Testing Cross Entropy:",log_loss(y_test, testing_predictions))
     return testing_predictions
 
 def exercise4():
@@ -240,19 +247,24 @@ def exercise4():
     if best_cross == cross3:
         best_classifier = classifier3
         print("Best is 60 Boosts")
-
-    # if predict1 < predict2:
-    #     best_classifier = entropy_tree
-    #     print("Best is Information Gain")
-    # else:
-    #     best_classifier = gini_tree
-    #     print("Best is Gini impurity index")
     
+    best_classifier.fit(X_combo, y_combo)
     testing_predictions = best_classifier.predict_proba(X_test)
     print("Testing Cross Entropy:",crossEntropy(y_test, testing_predictions))
     return testing_predictions
 
+def exercise5(p1, p2, p3):
+    print("Exercise 5")
+    P1 = [], p1
+    P2 = [], p2
+    P3 = [], p3
+    thresholds = np.arange(0.0, 1.001, .001)
+    for P, p in P1, P2, P3:
+        for threshold in thresholds:
+            P.append(determinize(threshold, p))
+
 
 testing_prediction_2 = exercise2()
-#testing_prediction_3 = exercise3()
+testing_prediction_3 = exercise3()
 testing_prediction_4 = exercise4()
+exercise5(testing_prediction_2, testing_prediction_3, testing_prediction_4)
