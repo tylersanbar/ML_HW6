@@ -272,19 +272,30 @@ def exercise5(model2, model3, model4):
     for model in model2, model3, model4:
         TPR = []
         FPR = []
+        max_youden = -inf
         y = model.predict(X_test)
         p = model.predict_proba(X_test)
         for threshold in thresholds:
             P = determinize(threshold, p)
-            cm = confusionMatrix(y, P)
+            cm = confusionMatrix(y_test, P)
             positive = float(cm[1][1] + cm[1][0])
             negative = float(cm[0][1] + cm[0][0])
             tpr = (cm[1][1])/positive if positive > 0 else 0
             fpr = (cm[0][1])/negative if negative > 0 else 0
             TPR.append(tpr)
             FPR.append(fpr)
+            youden = tpr - fpr
+            if youden > max_youden: 
+                max_youden = youden
+                max_threshold = threshold
+        print("Highest Youden is:", max_youden,"Probability threshold is:",max_threshold)
         
-        pyplot.scatter(TPR, FPR)
+        pyplot.scatter(FPR, TPR)
+    x = [0, 1]
+    y = [0, 1]
+    pyplot.plot(x, y, '--', color='0.5')
+    pyplot.xlabel("FPR")
+    pyplot.ylabel("TPR")
     pyplot.show()
 
 model2 = exercise2()
