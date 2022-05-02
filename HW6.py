@@ -1,12 +1,15 @@
 from math import inf, log
 import math
-from sklearn.linear_model import ElasticNet
-from sklearn.linear_model import LogisticRegression
-from sklearn.neural_network import MLPClassifier
 import numpy as np
 import itertools
-from typing import Tuple
-from csv import reader
+
+from sklearn.linear_model import ElasticNet
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import log_loss
+from sklearn.neural_network import MLPClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import AdaBoostClassifier
+
 def warn(*args, **kwargs):
     pass
 import warnings
@@ -68,15 +71,12 @@ def printMSE(params, MSE):
 def printBestMSE(params, MSE, bestIndex):
     print("Best - Lambda1:",params[bestIndex][0],"Lambda2:",params[bestIndex][1],"MSE:",MSE[bestIndex])
 
-
-
 def printConfusionMatrix(cm):
     print("True Negative:",cm[0][0])
     print("False Positive:",cm[0][1])
     print("False Negative:",cm[1][0])
     print("True Positive:", cm[1][1])
 
-#Exercise 4
 def loss(y, h):
     if y == h: return 1
     else: return 0
@@ -157,4 +157,58 @@ def exercise2():
     print("Testing Cross Entropy:",crossEntropy(testing_predictions, y_test))
     return testing_predictions
 
-testing_predictions = exercise2()
+def exercise3():
+    #Get data from CSVs
+    training_data, validation_data, testing_data = loadData("StabTraining.csv","StabValidation.csv","StabTesting.csv")
+    combined_data = np.append(training_data, validation_data, axis = 0)
+
+    X_train, y_train = getXY(training_data,11)
+    X_val, y_val = getXY(validation_data,11)
+    X_combo, y_combo = getXY(combined_data,11)
+    X_test, y_test = getXY(testing_data,11)
+
+    gini_tree = DecisionTreeClassifier(criterion = "gini", max_depth=5, random_state=1)
+    
+    gini_tree.fit(X_train, y_train)
+
+    gini_predict = gini_tree.predict_proba(X_val)
+
+    gini_cross = log_loss(y_val, gini_predict)
+
+    entropy_tree = DecisionTreeClassifier(criterion="entropy", max_depth=5, random_state=1)
+
+    entropy_tree.fit(X_train, y_train)
+
+    entropy_predict = entropy_tree.predict_proba(X_val)
+
+    entropy_cross = log_loss(y_val, entropy_predict)
+
+    print("Cross Entropy for Gini: ", gini_cross)
+    print("Cross Entropy for Info Gain: ",entropy_cross)
+    if entropy_cross < gini_cross:
+        best_classifier = entropy_tree
+        print("Best is Information Gain")
+    else:
+        best_classifier = gini_tree
+        print("Best is Gini impurity index")
+
+    best_classifier.fit(X_combo, y_combo)
+    testing_predictions = best_classifier.predict_proba(X_test)
+    print("Testing Cross Entropy:",log_loss(y_test, testing_predictions))
+    return testing_predictions
+
+def exercise4():
+    #Get data from CSVs
+    training_data, validation_data, testing_data = loadData("StabTraining.csv","StabValidation.csv","StabTesting.csv")
+    combined_data = np.append(training_data, validation_data, axis = 0)
+
+    X_train, y_train = getXY(training_data,11)
+    X_val, y_val = getXY(validation_data,11)
+    X_combo, y_combo = getXY(combined_data,11)
+    X_test, y_test = getXY(testing_data,11)
+
+    classifier1 = MLPClassifier(hidden_layer_sizes = (20,), random_state = 1)
+    classifier2 = MLPClassifier(hidden_layer_sizes = (10, 10), random_state = 1)
+
+#testing_prediction_2 = exercise2()
+testing_prediction_3 = exercise3()
