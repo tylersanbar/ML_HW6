@@ -5,7 +5,8 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 import numpy as np
 import itertools
-
+from typing import Tuple
+from csv import reader
 def warn(*args, **kwargs):
     pass
 import warnings
@@ -67,10 +68,7 @@ def printMSE(params, MSE):
 def printBestMSE(params, MSE, bestIndex):
     print("Best - Lambda1:",params[bestIndex][0],"Lambda2:",params[bestIndex][1],"MSE:",MSE[bestIndex])
 
-def getXY(data, num_features):
-    X = data[:,0:num_features-1]
-    y = data[:,num_features]
-    return X, y
+
 
 def printConfusionMatrix(cm):
     print("True Negative:",cm[0][0])
@@ -103,11 +101,17 @@ def confusionMatrix(y, h):
             else: false_pos += 1
     return [[true_neg, false_pos], [false_neg, true_pos]]
 
+def getXY(data, num_features):
+    X = data[:,0:num_features]
+    y = data[:,num_features]
+    return X, y
+
 def crossEntropy(h, c):
     cross_entropy = 0
     for i in range(len(h)):
         cross_entropy += c[i] * log(h[i][0]) + (1 - c[i]) * log(1 - h[i][0])
     return cross_entropy / -len(h)
+
 
 def loadData(training_name, validation_name, testing_name):
     #Get data from CSVs
@@ -118,20 +122,39 @@ def loadData(training_name, validation_name, testing_name):
 
 def exercise2():
     #Get data from CSVs
-    stab_training_data, stab_validation_data, stab_testing_data = loadData("StabTraining.csv","StabValidation.csv","StabTesting.csv")
-    X, y = getXY(stab_training_data, 11)
-    classifier1 = MLPClassifier(hidden_layer_sizes=(20,))
-    classifier2 = MLPClassifier(hidden_layer_sizes=(10,10))
-    classifier1.fit(X, y)
-    classifier2.fit(X, y)
-    X, y = getXY(stab_validation_data, 11)
-    predict1 = classifier1.predict_proba(X)
-    predict2 = classifier2.predict_proba(X)
+    training_data, validation_data, testing_data = loadData("StabTraining.csv","StabValidation.csv","StabTesting.csv")
+    combined_data = np.append(training_data, validation_data, axis = 0)
 
-    cross1 = crossEntropy(predict1, y)
-    cross2 = crossEntropy(predict2, y)
+    X_train, y_train = getXY(training_data,11)
+    X_val, y_val = getXY(validation_data,11)
+    X_combo, y_combo = getXY(combined_data,11)
+    X_test, y_test = getXY(testing_data,11)
 
-    print(cross1)
-    print(cross2)
+    classifier1 = MLPClassifier(hidden_layer_sizes = (20,), random_state = 1)
+    classifier2 = MLPClassifier(hidden_layer_sizes = (10, 10), random_state = 1)
 
-exercise2()
+    classifier1.fit(X_train, y_train)
+    classifier2.fit(X_train, y_train)
+
+    predict1 = classifier1.predict_proba(X_val)
+    predict2 = classifier2.predict_proba(X_val)
+
+    cross1 = crossEntropy(predict1, y_val)
+    cross2 = crossEntropy(predict2, y_val)
+
+    print("Cross Entropy for Classifier with 1 hidden layer of 20 units: ", cross1)
+    print("Cross Entropy for Classifier with 2 hidden layers of 10 units: ",cross2)
+
+    if cross1 < cross2:
+        best_classifier = classifier1
+        print("Best is Classifier 1")
+    else:
+        best_classifier = classifier2
+        print("Best is Classifier 2")
+    
+    best_classifier.fit(X_combo, y_combo)
+    testing_predictions = best_classifier.predict_proba(X_test)
+    print("Testing Cross Entropy:",crossEntropy(testing_predictions, y_test))
+    return testing_predictions
+
+testing_predictions = exercise2()
