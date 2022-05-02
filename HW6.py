@@ -154,16 +154,16 @@ def exercise2():
     print("Cross Entropy for Classifier with 2 hidden layers of 10 units: ",cross2)
 
     if cross1 < cross2:
-        best_classifier = classifier1
+        best_model = classifier1
         print("Best is Classifier 1")
     else:
-        best_classifier = classifier2
+        best_model = classifier2
         print("Best is Classifier 2")
     
-    best_classifier.fit(X_combo, y_combo)
-    testing_predictions = best_classifier.predict_proba(X_test)
+    best_model.fit(X_combo, y_combo)
+    testing_predictions = best_model.predict_proba(X_test)
     print("Testing Cross Entropy:",crossEntropy(y_test, testing_predictions))
-    return testing_predictions
+    return best_model
 
 def exercise3():
     print("Exercise 3")
@@ -192,16 +192,16 @@ def exercise3():
     print("Cross Entropy for Info Gain: ",entropy_cross)
 
     if entropy_cross < gini_cross:
-        best_classifier = entropy_tree
+        best_model = entropy_tree
         print("Best is Information Gain")
     else:
-        best_classifier = gini_tree
+        best_model = gini_tree
         print("Best is Gini impurity index")
 
-    best_classifier.fit(X_combo, y_combo)
-    testing_predictions = best_classifier.predict_proba(X_test)
+    best_model.fit(X_combo, y_combo)
+    testing_predictions = best_model.predict_proba(X_test)
     print("Testing Cross Entropy:",log_loss(y_test, testing_predictions))
-    return testing_predictions
+    return best_model
 
 def exercise4():
     print("Exercise 4")
@@ -239,32 +239,52 @@ def exercise4():
         if cross < best_cross: best_cross = cross
     
     if best_cross == cross1:
-        best_classifier = classifier1
+        best_model = classifier1
         print("Best is 20 Boosts")
     if best_cross == cross2:
-        best_classifier = classifier2
+        best_model = classifier2
         print("Best is 40 Boosts")
     if best_cross == cross3:
-        best_classifier = classifier3
+        best_model = classifier3
         print("Best is 60 Boosts")
     
-    best_classifier.fit(X_combo, y_combo)
-    testing_predictions = best_classifier.predict_proba(X_test)
+    best_model.fit(X_combo, y_combo)
+    testing_predictions = best_model.predict_proba(X_test)
     print("Testing Cross Entropy:",crossEntropy(y_test, testing_predictions))
-    return testing_predictions
+    return best_model
 
-def exercise5(p1, p2, p3):
+def exercise5(model2, model3, model4):
     print("Exercise 5")
-    P1 = [], p1
-    P2 = [], p2
-    P3 = [], p3
+
+    #Get data from CSVs
+    training_data, validation_data, testing_data = loadData("StabTraining.csv","StabValidation.csv","StabTesting.csv")
+    combined_data = np.append(training_data, validation_data, axis = 0)
+
+    X_train, y_train = getXY(training_data,11)
+    X_val, y_val = getXY(validation_data,11)
+    X_combo, y_combo = getXY(combined_data,11)
+    X_test, y_test = getXY(testing_data,11)
+
     thresholds = np.arange(0.0, 1.001, .001)
-    for P, p in P1, P2, P3:
+
+    for model in model2, model3, model4:
+        TPR = []
+        FPR = []
+        y = model.predict(X_test)
+        p = model.predict_proba(X_test)
         for threshold in thresholds:
-            P.append(determinize(threshold, p))
+            P = determinize(threshold, p)
+            cm = confusionMatrix(y, P)
+            tpr = cm[1][1]
+            fpr = cm[0][1]
+            TPR.append(cm[1][1])
+            FPR.append(cm[0][1])
+            print(tpr, fpr)
+    
 
 
-testing_prediction_2 = exercise2()
-testing_prediction_3 = exercise3()
-testing_prediction_4 = exercise4()
-exercise5(testing_prediction_2, testing_prediction_3, testing_prediction_4)
+
+model2 = exercise2()
+model3 = exercise3()
+model4 = exercise4()
+exercise5(model2, model3, model4)
