@@ -106,10 +106,10 @@ def getXY(data, num_features):
     y = data[:,num_features]
     return X, y
 
-def crossEntropy(h, c):
+def crossEntropy(c, h):
     cross_entropy = 0
     for i in range(len(h)):
-        cross_entropy += c[i] * log(h[i][0]) + (1 - c[i]) * log(1 - h[i][0])
+        cross_entropy += c[i] * log(h[i][1]) + (1 - c[i]) * log(1 - h[i][1])
     return cross_entropy / -len(h)
 
 
@@ -121,6 +121,7 @@ def loadData(training_name, validation_name, testing_name):
     return training_data, validation_data, testing_data
 
 def exercise2():
+    print("Exercise 2")
     #Get data from CSVs
     training_data, validation_data, testing_data = loadData("StabTraining.csv","StabValidation.csv","StabTesting.csv")
     combined_data = np.append(training_data, validation_data, axis = 0)
@@ -139,8 +140,8 @@ def exercise2():
     predict1 = classifier1.predict_proba(X_val)
     predict2 = classifier2.predict_proba(X_val)
 
-    cross1 = crossEntropy(predict1, y_val)
-    cross2 = crossEntropy(predict2, y_val)
+    cross1 = crossEntropy(y_val, predict1)
+    cross2 = crossEntropy(y_val, predict2)
 
     print("Cross Entropy for Classifier with 1 hidden layer of 20 units: ", cross1)
     print("Cross Entropy for Classifier with 2 hidden layers of 10 units: ",cross2)
@@ -154,10 +155,11 @@ def exercise2():
     
     best_classifier.fit(X_combo, y_combo)
     testing_predictions = best_classifier.predict_proba(X_test)
-    print("Testing Cross Entropy:",crossEntropy(testing_predictions, y_test))
+    print("Testing Cross Entropy:",crossEntropy(y_test, testing_predictions))
     return testing_predictions
 
 def exercise3():
+    print("Exercise 3")
     #Get data from CSVs
     training_data, validation_data, testing_data = loadData("StabTraining.csv","StabValidation.csv","StabTesting.csv")
     combined_data = np.append(training_data, validation_data, axis = 0)
@@ -168,23 +170,20 @@ def exercise3():
     X_test, y_test = getXY(testing_data,11)
 
     gini_tree = DecisionTreeClassifier(criterion = "gini", max_depth=5, random_state=1)
-    
-    gini_tree.fit(X_train, y_train)
-
-    gini_predict = gini_tree.predict_proba(X_val)
-
-    gini_cross = log_loss(y_val, gini_predict)
-
     entropy_tree = DecisionTreeClassifier(criterion="entropy", max_depth=5, random_state=1)
 
+    gini_tree.fit(X_train, y_train)
     entropy_tree.fit(X_train, y_train)
 
+    gini_predict = gini_tree.predict_proba(X_val)
     entropy_predict = entropy_tree.predict_proba(X_val)
 
-    entropy_cross = log_loss(y_val, entropy_predict)
+    gini_cross = crossEntropy(y_val, gini_predict)
+    entropy_cross = crossEntropy(y_val, entropy_predict)
 
     print("Cross Entropy for Gini: ", gini_cross)
     print("Cross Entropy for Info Gain: ",entropy_cross)
+
     if entropy_cross < gini_cross:
         best_classifier = entropy_tree
         print("Best is Information Gain")
@@ -194,10 +193,11 @@ def exercise3():
 
     best_classifier.fit(X_combo, y_combo)
     testing_predictions = best_classifier.predict_proba(X_test)
-    print("Testing Cross Entropy:",log_loss(y_test, testing_predictions))
+    print("Testing Cross Entropy:",crossEntropy(y_test, testing_predictions))
     return testing_predictions
 
 def exercise4():
+    print("Exercise 4")
     #Get data from CSVs
     training_data, validation_data, testing_data = loadData("StabTraining.csv","StabValidation.csv","StabTesting.csv")
     combined_data = np.append(training_data, validation_data, axis = 0)
@@ -207,8 +207,52 @@ def exercise4():
     X_combo, y_combo = getXY(combined_data,11)
     X_test, y_test = getXY(testing_data,11)
 
-    classifier1 = MLPClassifier(hidden_layer_sizes = (20,), random_state = 1)
-    classifier2 = MLPClassifier(hidden_layer_sizes = (10, 10), random_state = 1)
+    classifier1 = AdaBoostClassifier(n_estimators=20, random_state=1)
+    classifier2 = AdaBoostClassifier(n_estimators=40, random_state=1)
+    classifier3 = AdaBoostClassifier(n_estimators=60, random_state=1)
 
-#testing_prediction_2 = exercise2()
-testing_prediction_3 = exercise3()
+    classifier1.fit(X_train, y_train)
+    classifier2.fit(X_train, y_train)
+    classifier3.fit(X_train, y_train)
+
+    predict1 = classifier1.predict_proba(X_val)
+    predict2 = classifier2.predict_proba(X_val)
+    predict3 = classifier3.predict_proba(X_val)
+
+    cross1 = crossEntropy(y_val, predict1)
+    cross2 = crossEntropy(y_val, predict2)
+    cross3 = crossEntropy(y_val, predict3)
+
+    print("20 Stumps Cross Entropy: ",cross1)
+    print("40 Stumps Cross Entropy: ",cross2)
+    print("60 Stumps Cross Entropy: ",cross3)
+
+    best_cross = inf
+    for cross in (cross1, cross2, cross3):
+        if cross < best_cross: best_cross = cross
+    
+    if best_cross == cross1:
+        best_classifier = classifier1
+        print("Best is 20 Boosts")
+    if best_cross == cross2:
+        best_classifier = classifier2
+        print("Best is 40 Boosts")
+    if best_cross == cross3:
+        best_classifier = classifier3
+        print("Best is 60 Boosts")
+
+    # if predict1 < predict2:
+    #     best_classifier = entropy_tree
+    #     print("Best is Information Gain")
+    # else:
+    #     best_classifier = gini_tree
+    #     print("Best is Gini impurity index")
+    
+    testing_predictions = best_classifier.predict_proba(X_test)
+    print("Testing Cross Entropy:",crossEntropy(y_test, testing_predictions))
+    return testing_predictions
+
+
+testing_prediction_2 = exercise2()
+#testing_prediction_3 = exercise3()
+testing_prediction_4 = exercise4()
