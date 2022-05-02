@@ -10,6 +10,8 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier
 
+from matplotlib import pyplot
+
 def warn(*args, **kwargs):
     pass
 import warnings
@@ -275,14 +277,13 @@ def exercise5(model2, model3, model4):
         for threshold in thresholds:
             P = determinize(threshold, p)
             cm = confusionMatrix(y, P)
-            tpr = cm[1][1]
-            fpr = cm[0][1]
-            TPR.append(cm[1][1])
-            FPR.append(cm[0][1])
-            print(tpr, fpr)
-    
-
-
+            tpr = (cm[1][1])/len(P)
+            fpr = (cm[0][1])/len(P)
+            TPR.append(tpr)
+            FPR.append(fpr)
+        
+        pyplot.scatter(TPR, FPR)
+        pyplot.show()
 
 model2 = exercise2()
 model3 = exercise3()
